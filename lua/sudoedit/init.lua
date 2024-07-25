@@ -61,6 +61,7 @@ function M.detect()
       -- Taken from /usr/share/nvim/runtime/filetype.lua --
       local ft, on_detect = vim.filetype.match({
         filename = filename,
+        buf = buf,
       })
 
       if not ft then
