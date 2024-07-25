@@ -25,3 +25,19 @@ Let nvim detect filetype properly when used with sudoedit
 
 ## credits
 [vim-eunuch](https://github.com/tpope/vim-eunuch)
+
+## known issues
+Currently this only works for cases where filename matches suffice.
+When it needs more ftdetect functions the plugin does not work.
+There is no simple way to override bufname used in ftdetect in nvim currently.
+
+* known working
+  - /etc/ssh/ssh_config
+  - /etc/fstab
+  - /etc/resolv.conf
+  - ...
+
+* known bugged
+  - /etc/bash.bash_logout
+  - /etc/bash.bashrc
+  - ...
