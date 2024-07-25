@@ -13,13 +13,11 @@ local function slice(arr, start, end_pos)
 end
 
 function M.get_proc_status(pid)
-  local status = nil
   if pid then
-    status = vim.fn.readfile(string.format("/proc/%i/status", pid))
+    return vim.fn.readfile(string.format("/proc/%i/status", pid))
   else
-    status = vim.fn.readfile("/proc/self/status")
+    return vim.fn.readfile("/proc/self/status")
   end
-  return status
 end
 
 function M.get_ppid(pid)
