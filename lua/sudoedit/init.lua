@@ -56,7 +56,7 @@ function M.detect()
   if M.is_sudoedit() then
 
     for _, filename in pairs(M.cmdline) do
-      local buf = vim.fn.bufnr("%")
+      local buf = vim.api.nvim_get_current_buf()
 
       -- Taken from /usr/share/nvim/runtime/filetype.lua --
       local ft, on_detect = vim.filetype.match({
