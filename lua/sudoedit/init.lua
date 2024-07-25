@@ -64,14 +64,7 @@ function M.detect()
         buf = buf,
       })
 
-      if not ft then
-        ft = require("vim.filetype.detect").conf(filename, buf)
-        if ft then
-          vim.api.nvim_buf_call(buf, function()
-            vim.api.nvim_cmd({ cmd = "setf", args = { "FALLBACK", ft } }, {})
-          end)
-        end
-      else
+      if ft then
         if on_detect then
           on_detect(buf)
         end
