@@ -25,3 +25,6 @@ Let nvim detect filetype properly when used with sudoedit
 
 ## credits
 [vim-eunuch](https://github.com/tpope/vim-eunuch)
+
+## notes
+* This plugin does not work if the fileypte cannot be detected normally. E.g. on NixOS, where most of the files under `/etc` are symlinks, and `sudoedit` does not allow editing symlinks.
