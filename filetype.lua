@@ -1,1 +1,3 @@
-require("sudoedit").detect()
+pcall(function()
+  require("sudoedit").detect()
+end)
