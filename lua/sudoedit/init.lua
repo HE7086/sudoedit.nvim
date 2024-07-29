@@ -1,20 +1,27 @@
 local M = {}
 
 M.parent = false
-M.cmdline = {}
 
 local is_linux = vim.fn.has("linux") == 1
 local is_bsd = vim.fn.has("bsd") == 1
 
-local function slice(arr, start, end_pos)
+--- Create a subarray of arr[start, end)
+---@param arr any[]
+---@param start_pos integer
+---@param end_pos integer
+---@return any[]
+local function slice(arr, start_pos, end_pos)
   local pos, new = 1, {}
-  for i = start, end_pos do
+  for i = start_pos, end_pos do
     new[pos] = arr[i]
     pos = pos + 1
   end
   return new
 end
 
+--- Get content of /proc/pid/status
+---@param pid integer?
+---@return string? status
 function M.get_proc_status(pid)
   if pid then
     return vim.fn.readfile(string.format("/proc/%i/status", pid))
@@ -27,65 +34,84 @@ function M.get_proc_status(pid)
   end
 end
 
+--- Get parent pid
+---@param pid integer?
+---@return integer? ppid
 function M.get_ppid(pid)
   local status = M.get_proc_status(pid)
 
-  if is_linux then
-    return vim.fn.matchlist(status, [[^PPid:\s\+\(\d\+\)]])[2]
-  elseif is_bsd then
-    return vim.fn.split(status[1], " ")[3]
+  if status then
+    if is_linux then
+      return vim.fn.matchlist(status, [[^PPid:\s\+\(\d\+\)]])[2]
+    elseif is_bsd then
+      return vim.fn.split(status[1], " ")[3]
+    end
   end
 end
 
+--- Get cmdline of the process
+---@param pid integer?
+---@return string[] cmdline
 function M.get_cmdline(pid)
   local ppid = M.get_ppid(pid)
   local cmdline = vim.fn.readfile(string.format("/proc/%i/cmdline", ppid))[1]
   return vim.fn.split(cmdline, "\n")
 end
 
+--- Check if sudoedit is a (grand)parent of current process
+---@return boolean
+---@return string[] cmdline The cmdline of sudoedit without the head (sudo --edit, etc.)
 function M.is_sudoedit()
+  local cmdline = nil
   if M.parent then
-    M.cmdline = M.get_cmdline()
+    cmdline = M.get_cmdline()
   else
     -- somehow sudoedit is a "grandparent" of current process
     local ppid = M.get_ppid()
-    M.cmdline = M.get_cmdline(ppid)
+    cmdline = M.get_cmdline(ppid)
   end
 
-  if M.cmdline[1] == "sudoedit" then
-    M.cmdline = slice(M.cmdline, 2, #M.cmdline)
-    return true
-  elseif M.cmdline[1] == "sudo" and (M.cmdline[2] == "-e" or M.cmdline[2] == "--edit") then
-    M.cmdline = slice(M.cmdline, 3, #M.cmdline)
-    return true
+  if cmdline[1] == "sudoedit" then
+    cmdline = slice(cmdline, 2, #cmdline)
+    return true, cmdline
+  elseif cmdline[1] == "sudo" and (cmdline[2] == "-e" or cmdline[2] == "--edit") then
+    cmdline = slice(cmdline, 3, #cmdline)
+    return true, cmdline
   end
-  return false
+  return false, {}
 end
 
+--- Detect filetype if nvim is spawned by sudoedit
 function M.detect()
-  if (is_linux or is_bsd) and M.is_sudoedit() then
+  if not (is_linux or is_bsd) then
+    return
+  end
 
-    for _, filename in pairs(M.cmdline) do
-      local buf = vim.api.nvim_get_current_buf()
+  local is_sudoedit, cmdline = M.is_sudoedit()
 
-      -- Taken from /usr/share/nvim/runtime/filetype.lua --
-      local ft, on_detect = vim.filetype.match({
-        filename = filename,
-        buf = buf,
-      })
+  if not is_sudoedit then
+    return
+  end
 
-      if ft then
-        if on_detect then
-          on_detect(buf)
-        end
+  for _, filename in pairs(cmdline) do
+    local buf = vim.api.nvim_get_current_buf()
 
-        vim.api.nvim_buf_call(buf, function()
-          vim.api.nvim_cmd({ cmd = "setf", args = { ft } }, {})
-        end)
+    -- Taken from /usr/share/nvim/runtime/filetype.lua --
+    local ft, on_detect = vim.filetype.match({
+      filename = filename,
+      buf = buf,
+    })
+
+    if ft then
+      if on_detect then
+        on_detect(buf)
       end
-      -- Taken from /usr/share/nvim/runtime/filetype.lua --
 
+      vim.api.nvim_buf_call(buf, function()
+        vim.api.nvim_cmd({ cmd = "setf", args = { ft } }, {})
+      end)
     end
+    -- Taken from /usr/share/nvim/runtime/filetype.lua --
   end
 end
 
