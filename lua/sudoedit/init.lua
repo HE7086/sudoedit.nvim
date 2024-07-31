@@ -19,7 +19,7 @@ local function slice(arr, start_pos, end_pos)
   return new
 end
 
---- Get content of /proc/pid/status
+--- Get content of /proc/pid/status, nil on unsupported OS
 ---@param pid integer?
 ---@return string? status
 function M.get_proc_status(pid)
@@ -34,7 +34,7 @@ function M.get_proc_status(pid)
   end
 end
 
---- Get parent pid
+--- Get parent pid, nil on unsupported OS
 ---@param pid integer?
 ---@return integer? ppid
 function M.get_ppid(pid)
@@ -49,7 +49,7 @@ function M.get_ppid(pid)
   end
 end
 
---- Get cmdline of the process
+--- Get cmdline of the process, empty on unsupported OS
 ---@param pid integer?
 ---@return string[] cmdline
 function M.get_cmdline(pid)
@@ -72,11 +72,9 @@ function M.is_sudoedit()
   end
 
   if cmdline[1] == "sudoedit" then
-    cmdline = slice(cmdline, 2, #cmdline)
-    return true, cmdline
+    return true, slice(cmdline, 2, #cmdline)
   elseif cmdline[1] == "sudo" and (cmdline[2] == "-e" or cmdline[2] == "--edit") then
-    cmdline = slice(cmdline, 3, #cmdline)
-    return true, cmdline
+    return true, slice(cmdline, 3, #cmdline)
   end
   return false, {}
 end
