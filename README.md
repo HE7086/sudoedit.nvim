@@ -12,10 +12,14 @@ Let nvim detect filetype properly when used with **sudoedit**
 ```
 
 ## configuration
-* It seems that some versions of sudoedit spawns nvim as a child instead of a "grandchild" as on my machine. If this is the case for you, enable `parent = true`
 ```lua
   {
     "HE7086/sudoedit.nvim",
+    -- If you are sharing the same config on different platforms, you might want to disable the plugin for unsupported systems.
+    enabled = function()
+      return vim.fn.has("linux") == 1
+    end,
+    -- It seems that some versions of sudoedit spawns nvim as a child instead of a "grandchild" as on my machine. If this is the case for you, enable `parent = true`.
     opts = {
       parent = true,
     }
