@@ -1,7 +1,7 @@
 local M = {}
 
 M.parent = false
-M.filename = "%f"
+M.filename = "%F"
 
 local is_linux = vim.fn.has("linux") == 1
 local is_bsd = vim.fn.has("bsd") == 1

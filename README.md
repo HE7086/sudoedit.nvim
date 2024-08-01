@@ -26,7 +26,7 @@ Let nvim detect filetype properly when used with **sudoedit**
 
     -- default filename to use if nothing is detected, useful for statusline
     -- see `:h stl`
-    filename = "%f",
+    filename = "%F",
   }
 }
 ```
@@ -36,7 +36,7 @@ Let nvim detect filetype properly when used with **sudoedit**
 ```lua
 require("sudoedit").filename
 ```
-* Fallback: `%f`
+* Fallback: `%F`
 
 ## credits
 [vim-eunuch](https://github.com/tpope/vim-eunuch)
