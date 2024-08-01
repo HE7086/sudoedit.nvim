@@ -53,6 +53,10 @@ end
 ---@param pid integer
 ---@return string[] cmdline
 function M.get_cmdline(pid)
+  if not (is_linux or is_bsd) then
+    return {}
+  end
+
   local cmdline = vim.fn.readfile(string.format("/proc/%i/cmdline", pid))[1]
   return vim.fn.split(cmdline, "\n")
 end
