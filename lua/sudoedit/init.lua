@@ -34,9 +34,9 @@ function M.get_proc_status(pid)
   end
 end
 
---- Get parent pid, -1 on unsupported OS
+--- Get parent pid, nil on unsupported OS
 ---@param pid integer? nil for current process
----@return integer ppid
+---@return integer? ppid
 function M.get_ppid(pid)
   local status = M.get_proc_status(pid)
 
@@ -47,7 +47,6 @@ function M.get_ppid(pid)
       return vim.fn.split(status[1], " ")[3]
     end
   end
-  return -1
 end
 
 --- Get cmdline of the process, empty on unsupported OS
@@ -68,6 +67,10 @@ function M.is_sudoedit()
   else
     -- somehow sudoedit is a "grandparent" of current process
     ppid = M.get_ppid(M.get_ppid())
+  end
+
+  if not ppid then
+    return false, {}
   end
 
   local cmdline = M.get_cmdline(ppid)
