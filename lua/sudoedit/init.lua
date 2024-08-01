@@ -1,6 +1,7 @@
 local M = {}
 
 M.parent = false
+M.filename = "%f"
 
 local is_linux = vim.fn.has("linux") == 1
 local is_bsd = vim.fn.has("bsd") == 1
@@ -109,6 +110,7 @@ function M.detect()
     })
 
     if ft then
+      M.filename = filename
       if on_detect then
         on_detect(buf)
       end
@@ -124,6 +126,9 @@ end
 function M.setup(opts)
   if opts.parent then -- sudoedit is a parent of nvim instead of grandparent
     M.parent = opts.parent
+  end
+  if opts.filename then -- default filename when no filetype is detect
+    M.filename = opts.filename
   end
 end
 
