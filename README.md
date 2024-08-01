@@ -5,26 +5,38 @@ Let nvim detect filetype properly when used with **sudoedit**
 * Enjoy editing system configuration files with proper syntax highlighting :)
 * Only supports Linux and BSD (untested)
 
-## usage
+## installation
 * Lazy.nvim
 ```lua
-  { "HE7086/sudoedit.nvim" }
+-- for normal users the plugin works out-of-box
+{ "HE7086/sudoedit.nvim" }
 ```
 
 ## configuration
 ```lua
-  {
-    "HE7086/sudoedit.nvim",
-    -- If you are sharing the same config on different platforms, you might want to disable the plugin for unsupported systems.
-    enabled = function()
-      return vim.fn.has("linux") == 1
-    end,
+{
+  "HE7086/sudoedit.nvim",
+  -- If you are sharing the same config on different platforms, you might want to disable the plugin for unsupported systems.
+  enabled = function()
+    return vim.fn.has("linux") == 1
+  end,
+  opts = {
     -- It seems that some versions of sudoedit spawns nvim as a child instead of a "grandchild" as on my machine. If this is the case for you, enable `parent = true`.
-    opts = {
-      parent = true,
-    }
+    parent = true,
+
+    -- default filename to use if nothing is detected, useful for statusline
+    -- see `:h stl`
+    filename = "%f",
   }
+}
 ```
+
+## get filename for statusline
+* If you would like to display the actual filename in statusline (winbar, etc.), you can get that using:
+```lua
+require("sudoedit").filename
+```
+* Fallback: `%f`
 
 ## credits
 [vim-eunuch](https://github.com/tpope/vim-eunuch)
