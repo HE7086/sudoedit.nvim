@@ -20,7 +20,7 @@ local function slice(arr, start_pos, end_pos)
 end
 
 --- Get content of /proc/pid/status, nil on unsupported OS
----@param pid integer?
+---@param pid integer? nil for current process
 ---@return string? status
 function M.get_proc_status(pid)
   if pid then
@@ -34,9 +34,9 @@ function M.get_proc_status(pid)
   end
 end
 
---- Get parent pid, nil on unsupported OS
----@param pid integer?
----@return integer? ppid
+--- Get parent pid, -1 on unsupported OS
+---@param pid integer? nil for current process
+---@return integer ppid
 function M.get_ppid(pid)
   local status = M.get_proc_status(pid)
 
@@ -47,14 +47,14 @@ function M.get_ppid(pid)
       return vim.fn.split(status[1], " ")[3]
     end
   end
+  return -1
 end
 
 --- Get cmdline of the process, empty on unsupported OS
----@param pid integer?
+---@param pid integer
 ---@return string[] cmdline
 function M.get_cmdline(pid)
-  local ppid = M.get_ppid(pid)
-  local cmdline = vim.fn.readfile(string.format("/proc/%i/cmdline", ppid))[1]
+  local cmdline = vim.fn.readfile(string.format("/proc/%i/cmdline", pid))[1]
   return vim.fn.split(cmdline, "\n")
 end
 
@@ -62,14 +62,15 @@ end
 ---@return boolean
 ---@return string[] cmdline The cmdline of sudoedit without the head (sudo --edit, etc.)
 function M.is_sudoedit()
-  local cmdline = nil
+  local ppid
   if M.parent then
-    cmdline = M.get_cmdline()
+    ppid = M.get_ppid()
   else
     -- somehow sudoedit is a "grandparent" of current process
-    local ppid = M.get_ppid()
-    cmdline = M.get_cmdline(ppid)
+    ppid = M.get_ppid(M.get_ppid())
   end
+
+  local cmdline = M.get_cmdline(ppid)
 
   if cmdline[1] == "sudoedit" then
     return true, slice(cmdline, 2, #cmdline)
