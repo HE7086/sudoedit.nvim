@@ -118,32 +118,28 @@ function M.detect(buf)
     return
   end
 
-  for _, filename in pairs(cmdline) do
-    if has_value(M.filenames, filename) then
-      goto continue
+  -- TODO: check whether bufnr to cmdline mapping is consistent
+  local filename = cmdline[buf]
+
+  local ft, on_detect = vim.filetype.match({
+    filename = filename,
+    buf = buf,
+  })
+
+  M.filenames[buf] = filename
+
+  if ft then
+    -- TODO: verify on_detect actually takes effect
+    if on_detect then
+      on_detect(buf)
     end
 
-    local ft, on_detect = vim.filetype.match({
-      filename = filename,
-      buf = buf,
+    vim.filetype.add({
+      filename = {
+        [vim.api.nvim_buf_get_name(buf)] = ft,
+      },
     })
-
-    if ft then
-      M.filenames[buf] = filename
-
-      -- TODO: verify on_detect actually takes effect
-      if on_detect then
-        on_detect(buf)
-      end
-
-      vim.filetype.add({
-        filename = {
-          [vim.api.nvim_buf_get_name(buf)] = ft,
-        },
-      })
-      return
-    end
-    ::continue::
+    return
   end
 end
 
