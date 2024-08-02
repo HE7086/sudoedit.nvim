@@ -1,12 +1,12 @@
 ---@class M
----@field parent boolean 
+---@field parent boolean
 ---@field filename string
----@field files table<integer, string> bufnr -> filename
+---@field filenames table<integer, string> bufnr -> filename
 local M = {}
 
 M.parent = false
 M.filename = "%F"
-M.files = {}
+M.filenames = {}
 
 local is_linux = vim.fn.has("linux") == 1
 local is_bsd = vim.fn.has("bsd") == 1
@@ -23,6 +23,19 @@ local function slice(arr, start_pos, end_pos)
     pos = pos + 1
   end
   return new
+end
+
+--- Check if an array contains a value
+---@param arr any[]
+---@param val any
+---@return boolean
+local function has_value(arr, val)
+  for _, value in pairs(arr) do
+    if value == val then
+      return true
+    end
+  end
+  return false
 end
 
 --- Get content of /proc/pid/status, nil on unsupported OS
@@ -94,7 +107,7 @@ function M.is_sudoedit()
 end
 
 --- Detect filetype if nvim is spawned by sudoedit
-function M.detect()
+function M.detect(buf)
   if not (is_linux or is_bsd) then
     return
   end
@@ -106,25 +119,31 @@ function M.detect()
   end
 
   for _, filename in pairs(cmdline) do
-    local buf = vim.api.nvim_get_current_buf()
+    if has_value(M.filenames, filename) then
+      goto continue
+    end
 
-    -- Taken from /usr/share/nvim/runtime/filetype.lua --
     local ft, on_detect = vim.filetype.match({
       filename = filename,
       buf = buf,
     })
 
     if ft then
-      M.files[buf] = filename
+      M.filenames[buf] = filename
+
+      -- TODO: verify on_detect actually takes effect
       if on_detect then
         on_detect(buf)
       end
 
-      vim.api.nvim_buf_call(buf, function()
-        vim.api.nvim_cmd({ cmd = "setf", args = { ft } }, {})
-      end)
+      vim.filetype.add({
+        filename = {
+          [vim.api.nvim_buf_get_name(buf)] = ft,
+        },
+      })
+      return
     end
-    -- Taken from /usr/share/nvim/runtime/filetype.lua --
+    ::continue::
   end
 end
 
@@ -135,7 +154,7 @@ function M.detected(buf)
   if not buf then
     buf = vim.api.nvim_get_current_buf()
   end
-  return M.files[buf] ~= nil
+  return not (M.filenames[buf] == nil)
 end
 
 --- Return the actual filename used by sudoedit, or M.filename
@@ -145,8 +164,8 @@ function M.get_filename(buf)
   if not buf then
     buf = vim.api.nvim_get_current_buf()
   end
-  if M.files[buf] then
-    return M.files[buf]
+  if M.filenames[buf] then
+    return M.filenames[buf]
   end
   return M.filename
 end
