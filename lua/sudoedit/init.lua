@@ -1,7 +1,12 @@
+---@class M
+---@field parent boolean 
+---@field filename string
+---@field files table<integer, string> bufnr -> filename
 local M = {}
 
 M.parent = false
 M.filename = "%F"
+M.files = {}
 
 local is_linux = vim.fn.has("linux") == 1
 local is_bsd = vim.fn.has("bsd") == 1
@@ -110,7 +115,7 @@ function M.detect()
     })
 
     if ft then
-      M.filename = filename
+      M.files[buf] = filename
       if on_detect then
         on_detect(buf)
       end
@@ -121,6 +126,29 @@ function M.detect()
     end
     -- Taken from /usr/share/nvim/runtime/filetype.lua --
   end
+end
+
+--- Return true if the buffer is being edited by sudoedit
+---@param buf any
+---@return boolean
+function M.detected(buf)
+  if not buf then
+    buf = vim.api.nvim_get_current_buf()
+  end
+  return M.files[buf] ~= nil
+end
+
+--- Return the actual filename used by sudoedit, or M.filename
+---@param buf integer?
+---@return string filename
+function M.get_filename(buf)
+  if not buf then
+    buf = vim.api.nvim_get_current_buf()
+  end
+  if M.files[buf] then
+    return M.files[buf]
+  end
+  return M.filename
 end
 
 function M.setup(opts)
