@@ -6,7 +6,7 @@ local M = {}
 
 M.parent = false
 M.filename = "%F"
-M.filenames = {}
+M.cmdline = {}
 
 local is_linux = vim.fn.has("linux") == 1
 local is_bsd = vim.fn.has("bsd") == 1
@@ -23,19 +23,6 @@ local function slice(arr, start_pos, end_pos)
     pos = pos + 1
   end
   return new
-end
-
---- Check if an array contains a value
----@param arr any[]
----@param val any
----@return boolean
-local function has_value(arr, val)
-  for _, value in pairs(arr) do
-    if value == val then
-      return true
-    end
-  end
-  return false
 end
 
 --- Get content of /proc/pid/status, nil on unsupported OS
@@ -82,7 +69,6 @@ end
 
 --- Check if sudoedit is a (grand)parent of current process
 ---@return boolean
----@return string[] cmdline The cmdline of sudoedit without the head (sudo --edit, etc.)
 function M.is_sudoedit()
   local ppid
   if M.parent then
@@ -93,17 +79,19 @@ function M.is_sudoedit()
   end
 
   if not ppid then
-    return false, {}
+    return false
   end
 
   local cmdline = M.get_cmdline(ppid)
 
   if cmdline[1] == "sudoedit" then
-    return true, slice(cmdline, 2, #cmdline)
+    M.cmdline = slice(cmdline, 2, #cmdline)
+    return true
   elseif cmdline[1] == "sudo" and (cmdline[2] == "-e" or cmdline[2] == "--edit") then
-    return true, slice(cmdline, 3, #cmdline)
+    M.cmdline = slice(cmdline, 3, #cmdline)
+    return true
   end
-  return false, {}
+  return false
 end
 
 --- Detect filetype if nvim is spawned by sudoedit
@@ -112,21 +100,15 @@ function M.detect(buf)
     return
   end
 
-  local is_sudoedit, cmdline = M.is_sudoedit()
-
-  if not is_sudoedit then
+  if not M.is_sudoedit() then
     return
   end
 
-  -- TODO: check whether bufnr to cmdline mapping is consistent
-  local filename = cmdline[buf]
-
   local ft, on_detect = vim.filetype.match({
-    filename = filename,
+    -- TODO: check whether bufnr to cmdline mapping is consistent
+    filename = M.cmdline[buf],
     buf = buf,
   })
-
-  M.filenames[buf] = filename
 
   if ft then
     -- TODO: verify on_detect actually takes effect
@@ -150,7 +132,7 @@ function M.detected(buf)
   if not buf then
     buf = vim.api.nvim_get_current_buf()
   end
-  return not (M.filenames[buf] == nil)
+  return not (M.cmdline[buf] == nil)
 end
 
 --- Return the actual filename used by sudoedit, or M.filename
@@ -160,8 +142,8 @@ function M.get_filename(buf)
   if not buf then
     buf = vim.api.nvim_get_current_buf()
   end
-  if M.filenames[buf] then
-    return M.filenames[buf]
+  if M.cmdline[buf] then
+    return M.cmdline[buf]
   end
   return M.filename
 end
