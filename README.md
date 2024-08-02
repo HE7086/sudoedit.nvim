@@ -8,7 +8,7 @@ Let nvim detect filetype properly when used with **sudoedit**
 ## installation
 * Lazy.nvim
 ```lua
--- for normal users the plugin works out-of-box
+-- for normal Linux users the plugin works out-of-box
 { "HE7086/sudoedit.nvim" }
 ```
 
@@ -34,9 +34,26 @@ Let nvim detect filetype properly when used with **sudoedit**
 ## get filename for statusline
 * If you would like to display the actual filename in statusline (winbar, etc.), you can get that using:
 ```lua
-require("sudoedit").filename
+-- leave args empty for current buffer, or bufnr for specific buffer
+require("sudoedit").get_filename()
 ```
 * Fallback: `%F`
+
+### example statusline component using heirline.nvim
+```lua
+{ -- filename
+  provider = function(self)
+    return require("sudoedit").get_filename(self.bufnr)
+  end,
+},
+
+{ -- sudoedit indicator
+  provider = "[sudo]",
+  condition = function(self)
+    return require("sudoedit").detected(self.bufnr)
+  end,
+},
+```
 
 ## credits
 [vim-eunuch](https://github.com/tpope/vim-eunuch)
