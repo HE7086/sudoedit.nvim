@@ -31,13 +31,13 @@ end
 function M.get_proc_status(pid)
   if pid then
     return vim.fn.readfile(string.format("/proc/%i/status", pid))
-  else
-    if is_linux then
-      return vim.fn.readfile("/proc/self/status")
-    elseif is_bsd then
-      return vim.fn.readfile("/proc/curproc/status")
-    end
   end
+  if is_linux then
+    return vim.fn.readfile("/proc/self/status")
+  elseif is_bsd then
+    return vim.fn.readfile("/proc/curproc/status")
+  end
+  return nil
 end
 
 --- Get parent pid, nil on unsupported OS
@@ -46,12 +46,14 @@ end
 function M.get_ppid(pid)
   local status = M.get_proc_status(pid)
 
-  if status then
-    if is_linux then
-      return vim.fn.matchlist(status, [[^PPid:\s\+\(\d\+\)]])[2]
-    elseif is_bsd then
-      return vim.fn.split(status[1], " ")[3]
-    end
+  if not status then
+    return nil
+  end
+
+  if is_linux then
+    return vim.fn.matchlist(status, [[^PPid:\s\+\(\d\+\)]])[2]
+  elseif is_bsd then
+    return vim.fn.split(status[1], " ")[3]
   end
 end
 
@@ -71,22 +73,22 @@ function M.get_cmdline(pid)
   return vim.fn.split(cmdline, "\n")
 end
 
+--- Helper function for getting cmdline of the parent process
+---@return string[]
+function M.get_parent_cmdline()
+  if M.parent then
+    return M.get_cmdline(M.get_ppid())
+  end
+  return M.get_cmdline(M.get_ppid(M.get_ppid()))
+end
+
 --- Check if sudoedit is a (grand)parent of current process
 ---@return boolean
 function M.is_sudoedit()
-  local ppid
-  if M.parent then
-    ppid = M.get_ppid()
-  else
-    -- somehow sudoedit is a "grandparent" of current process
-    ppid = M.get_ppid(M.get_ppid())
-  end
-
-  if not ppid then
+  local cmdline = M.get_parent_cmdline()
+  if next(cmdline) == nil then
     return false
   end
-
-  local cmdline = M.get_cmdline(ppid)
   local cmd = vim.split(cmdline[1], "/")
 
   if cmd[#cmd] == "sudoedit" then
