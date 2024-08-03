@@ -56,11 +56,15 @@ function M.get_ppid(pid)
 end
 
 --- Get cmdline of the process, empty on unsupported OS
----@param pid integer
+---@param pid integer? nil for current process
 ---@return string[] cmdline
 function M.get_cmdline(pid)
   if not (is_linux or is_bsd) then
     return {}
+  end
+
+  if not pid then
+    pid = vim.fn.getpid()
   end
 
   local cmdline = vim.fn.readfile(string.format("/proc/%i/cmdline", pid))[1]
@@ -95,6 +99,7 @@ function M.is_sudoedit()
 end
 
 --- Detect filetype if nvim is spawned by sudoedit
+---@param buf integer The bufnr
 function M.detect(buf)
   if not (is_linux or is_bsd) then
     return
@@ -126,7 +131,7 @@ function M.detect(buf)
 end
 
 --- Return true if the buffer is being edited by sudoedit
----@param buf any
+---@param buf integer? The bufnr, empty for current buffer
 ---@return boolean
 function M.detected(buf)
   if not buf then
