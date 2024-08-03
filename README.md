@@ -67,6 +67,7 @@ require("sudoedit").get_filename()
   * you are using MacOS -- its `sudo` does not support `sudoedit`.
   * you are using other OSs -- Windows, Sun ... idk.
   * you are using other permission management tools like `doas`, `run0`.
+  * `/proc` is not accessible to nvim. E.g. mounted with `hidepid`, denied by SELinux, etc.
 
 * Why `sudoedit` instead of `sudo -E nvim`?
   * The main problem with the latter option is it spawns nvim as root. In order for nvim to still load plugins `-E` flags is used. That will cause nvim to write temporary files in your home directory as root. If you ever want to clean up some disk space you will find a lot of files owned by root in `~/.local/state/nvim`, `~/.cache/nvim`, etc. Not to mention if you accidentally updated plugins while nvim is running as root.
