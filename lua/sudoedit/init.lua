@@ -87,11 +87,12 @@ function M.is_sudoedit()
   end
 
   local cmdline = M.get_cmdline(ppid)
+  local cmd = vim.split(cmdline[1], "/")
 
-  if cmdline[1] == "sudoedit" then
+  if cmd[#cmd] == "sudoedit" then
     M.cmdline = slice(cmdline, 2, #cmdline)
     return true
-  elseif cmdline[1] == "sudo" and (cmdline[2] == "-e" or cmdline[2] == "--edit") then
+  elseif cmd[#cmd] == "sudo" and (cmdline[2] == "-e" or cmdline[2] == "--edit") then
     M.cmdline = slice(cmdline, 3, #cmdline)
     return true
   end
