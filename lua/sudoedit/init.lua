@@ -118,19 +118,20 @@ function M.detect(buf)
     buf = buf,
   })
 
-  if ft then
-    -- TODO: verify on_detect actually takes effect
-    if on_detect then
-      on_detect(buf)
-    end
-
-    vim.filetype.add({
-      filename = {
-        [vim.api.nvim_buf_get_name(buf)] = ft,
-      },
-    })
+  if not ft then
     return
   end
+
+  -- TODO: verify on_detect actually takes effect
+  if on_detect then
+    on_detect(buf)
+  end
+
+  vim.filetype.add({
+    filename = {
+      [vim.api.nvim_buf_get_name(buf)] = ft,
+    },
+  })
 end
 
 --- Return true if the buffer is being edited by sudoedit

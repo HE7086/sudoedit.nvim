@@ -85,6 +85,6 @@ alias sudo "sudo " # note the important trailing space
 ```
 
 * How much time does the plugin take at startup?
-  * < 0.1ms per file.
+  * about 0.1ms per file.
 
 * Note: currently there might be some edge cases where actual filename is not detected correctly. Mainly when editing multiple files at a time, i.e. `sudoedit file1 file2 ...`. To get around this, always edit one file at a time.
