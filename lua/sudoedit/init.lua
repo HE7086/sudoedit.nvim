@@ -98,6 +98,10 @@ end
 --- Check if sudoedit is a (grand)parent of current process
 ---@return boolean
 function M.is_sudoedit()
+  if #M.cmdline > 0 then
+    return true
+  end
+
   local cmdline = M.get_parent_cmdline()
   if next(cmdline) == nil then
     return false
