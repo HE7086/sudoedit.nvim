@@ -1,7 +1,7 @@
 ---@class M
 ---@field parent boolean
 ---@field filename string
----@field filenames table<integer, string> bufnr -> filename
+---@field cmdline table<integer, string> bufnr -> filename
 local M = {}
 
 M.parent = false
@@ -82,6 +82,19 @@ function M.get_parent_cmdline()
   return M.get_cmdline(M.get_ppid(M.get_ppid()))
 end
 
+--- Get offset to filenames after "--"
+---@param arr string[]
+---@param index integer
+---@return integer index
+local function get_offset(arr, index)
+  for i = index, #arr do
+    if arr[i] == "--" then
+      return i + 1
+    end
+  end
+  return index
+end
+
 --- Check if sudoedit is a (grand)parent of current process
 ---@return boolean
 function M.is_sudoedit()
@@ -92,10 +105,10 @@ function M.is_sudoedit()
   local cmd = vim.split(cmdline[1], "/")
 
   if cmd[#cmd] == "sudoedit" then
-    M.cmdline = slice(cmdline, 2, #cmdline)
+    M.cmdline = slice(cmdline, get_offset(cmdline, 2), #cmdline)
     return true
   elseif cmd[#cmd] == "sudo" and (cmdline[2] == "-e" or cmdline[2] == "--edit") then
-    M.cmdline = slice(cmdline, 3, #cmdline)
+    M.cmdline = slice(cmdline, get_offset(cmdline, 3), #cmdline)
     return true
   end
   return false
