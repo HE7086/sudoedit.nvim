@@ -149,6 +149,9 @@ function M.detect(buf)
       [vim.api.nvim_buf_get_name(buf)] = ft,
     },
   })
+  vim._with({ buf = buf }, function()
+    vim.api.nvim_cmd({ cmd = "setf", args = { ft } }, {})
+  end)
 end
 
 --- Return true if the buffer is being edited by sudoedit
