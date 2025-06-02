@@ -90,3 +90,4 @@ alias sudo "sudo " # note the important trailing space
   * about 0.1ms per file.
 
 * Note: currently there might be some edge cases where actual filename is not detected correctly. Mainly when editing multiple files at a time, i.e. `sudoedit file1 file2 ...`. To get around this, always edit one file at a time.
+* Note: `sudo-rs` does not support `sudoedit` [yet](https://github.com/trifectatechfoundation/sudo-rs/issues/762)
